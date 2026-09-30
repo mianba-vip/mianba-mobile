@@ -64,12 +64,17 @@ jobs:
       - name: Capacitor sync
         run: npx cap sync android
 
+      - name: Switch maven repos (境外 runner 直连官方源)
+        run: |
+          cd android
+          # 本机的 aliyun 镜像对境外 runner 返回 502；CI 构建时切回官方源
+          # （wrapper 的腾讯镜像同理）。本机构建不受影响，仓库文件保持不变。
+          find . -name "*.gradle" -exec sed -i             -e "s|https://maven.aliyun.com/repository/google|https://maven.google.com|g"             -e "s|https://maven.aliyun.com/repository/central|https://repo.maven.apache.org/maven2|g"             -e "s|https://maven.aliyun.com/repository/gradle-plugin|https://plugins.gradle.org/m2|g"             -e "s|https://maven.aliyun.com/repository/public|https://repo.maven.apache.org/maven2|g"             {} +
+          sed -i "s|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-8.14.3-all.zip|" gradle/wrapper/gradle-wrapper.properties
+
       - name: Gradle assembleDebug
         run: |
           cd android
-          # 本仓库的 wrapper 指向腾讯镜像（本机构建用）；CI runner 在境外，
-          # 切回官方源（与原后端仓库 build-mobile.yml 的做法一致）
-          sed -i "s|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-8.14.3-all.zip|" gradle/wrapper/gradle-wrapper.properties
           sh gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
