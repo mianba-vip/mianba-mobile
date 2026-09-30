@@ -67,6 +67,9 @@ jobs:
       - name: Gradle assembleDebug
         run: |
           cd android
+          # 本仓库的 wrapper 指向腾讯镜像（本机构建用）；CI runner 在境外，
+          # 切回官方源（与原后端仓库 build-mobile.yml 的做法一致）
+          sed -i "s|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-8.14.3-all.zip|" gradle/wrapper/gradle-wrapper.properties
           sh gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
